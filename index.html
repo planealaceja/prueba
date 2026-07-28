@@ -1,0 +1,1969 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Geo-Ceja | Municipio de La Ceja del Tambo</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@300;400;600;700&family=Montserrat:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --blue: #1a4fd6;
+    --blue-dark: #0d3aad;
+    --blue-mid: #1e5799;
+    --teal: #00b4c8;
+    --teal-light: #00d4e8;
+    --teal-bg: #e6f8fb;
+    --white: #ffffff;
+    --gray-light: #f5f7fa;
+    --gray-border: #e2e8f0;
+    --gray-text: #4a5568;
+    --gray-muted: #718096;
+    --panel-w: 320px;
+    --top-h: 52px;
+    --shadow: 0 2px 12px rgba(0,0,0,0.15);
+    --shadow-lg: 0 4px 24px rgba(0,0,0,0.22);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 100%; height: 100%; overflow: hidden; font-family: 'Source Sans 3', sans-serif; }
+
+  /* ── TOP BAR ── */
+  #topbar {
+    position: absolute; top: 0; left: 0; right: 0; height: var(--top-h);
+    background: var(--blue);
+    z-index: 1100;
+    display: flex; align-items: center;
+    padding: 0 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  }
+  #topbar-logo {
+    display: flex; align-items: center; gap: 10px;
+    margin-right: 20px; flex-shrink: 0;
+  }
+  #topbar-logo .logo-circle {
+    width: 34px; height: 34px; border-radius: 50%;
+    background: white;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
+  #topbar-logo .logo-text {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 14px; font-weight: 700; color: white;
+    letter-spacing: 0.5px;
+  }
+  #topbar-logo .logo-sub {
+    font-size: 9px; color: rgba(255,255,255,0.75);
+    letter-spacing: 1.5px; text-transform: uppercase;
+    display: block; margin-top: -2px;
+  }
+
+  /* Search bar */
+  #search-bar {
+    display: flex; align-items: center;
+    background: white; border-radius: 24px;
+    padding: 0 14px; height: 36px; gap: 8px;
+    flex: 1; max-width: 380px;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.2);
+  }
+  #search-bar .user-icon {
+    width: 26px; height: 26px; border-radius: 50%;
+    background: var(--teal); display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  #search-bar .user-icon svg { width: 14px; height: 14px; color: white; }
+  #search-input-top {
+    flex: 1; border: none; outline: none;
+    font-family: 'Source Sans 3', sans-serif; font-size: 13px; color: #333;
+    background: transparent;
+  }
+  #search-input-top::placeholder { color: #aaa; }
+  #search-bar .search-icon-btn {
+    background: none; border: none; cursor: pointer; display: flex; align-items: center;
+  }
+  #search-bar .search-icon-btn svg { width: 16px; height: 16px; color: var(--teal); }
+  #search-bar .filter-btn {
+    background: none; border: none; cursor: pointer; display: flex; align-items: center;
+    border-left: 1px solid #e0e0e0; padding-left: 8px;
+  }
+  #search-bar .filter-btn svg { width: 16px; height: 16px; color: var(--teal); }
+
+  /* Top right */
+  #topbar-right {
+    margin-left: auto; display: flex; align-items: center; gap: 10px;
+  }
+  .top-pill {
+    background: rgba(255,255,255,0.18); color: white;
+    border: 1.5px solid rgba(255,255,255,0.5); border-radius: 20px;
+    padding: 5px 14px; font-size: 12px; font-weight: 700;
+    cursor: pointer; transition: background 0.15s; white-space: nowrap;
+    letter-spacing: 0.3px;
+  }
+  .top-pill:hover { background: rgba(255,255,255,0.3); }
+  .top-icon-btn {
+    width: 34px; height: 34px; border-radius: 50%;
+    background: rgba(255,255,255,0.15); border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s;
+  }
+  .top-icon-btn:hover { background: rgba(255,255,255,0.3); }
+  .top-icon-btn svg { width: 18px; height: 18px; color: white; }
+  .top-institution {
+    text-align: right; color: white; font-size: 10px; line-height: 1.3;
+    opacity: 0.9;
+  }
+  .top-institution strong { font-size: 11px; display: block; }
+
+  /* ── MAP ── */
+  #map {
+    position: absolute;
+    top: var(--top-h); left: 0; right: var(--panel-w); bottom: 0;
+    z-index: 1;
+  }
+
+  /* ── LEFT FLOATING TOOLS ── */
+  #left-tools {
+    position: absolute;
+    top: calc(var(--top-h) + 16px);
+    left: 14px;
+    z-index: 1000;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .lt-btn {
+    width: 38px; height: 38px; border-radius: 50%;
+    background: white; border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: var(--shadow); transition: all 0.18s;
+    position: relative;
+  }
+  .lt-btn:hover { background: var(--teal); transform: scale(1.08); }
+  .lt-btn:hover svg { color: white; }
+  .lt-btn svg { width: 18px; height: 18px; color: var(--teal); transition: color 0.18s; }
+  .lt-btn.active { background: var(--teal); }
+  .lt-btn.active svg { color: white; }
+  .lt-btn::after {
+    content: attr(data-tip);
+    position: absolute; left: 46px; top: 50%; transform: translateY(-50%);
+    background: rgba(10,30,60,0.88); color: white;
+    font-size: 11.5px; padding: 4px 10px; border-radius: 5px;
+    white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity 0.15s;
+    font-family: 'Source Sans 3', sans-serif; font-weight: 600;
+  }
+  .lt-btn:hover::after { opacity: 1; }
+
+  /* Left zoom group */
+  #left-zoom {
+    position: absolute;
+    bottom: 120px; left: 14px; z-index: 1000;
+    display: flex; flex-direction: column; gap: 2px;
+  }
+  .lz-btn {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: white; border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: var(--shadow); font-size: 18px; color: var(--teal);
+    font-weight: 300; line-height: 1; transition: all 0.15s;
+  }
+  .lz-btn:hover { background: var(--teal); color: white; }
+
+  /* Mini-map */
+  #minimap-wrap {
+    position: absolute; bottom: 16px; left: 14px; z-index: 1000;
+    width: 110px; height: 80px;
+    border: 2px solid white; border-radius: 4px;
+    box-shadow: var(--shadow-lg); overflow: hidden; cursor: pointer;
+  }
+  #minimap { width: 100%; height: 100%; }
+  #minimap-expand {
+    position: absolute; bottom: 0; right: 0;
+    width: 18px; height: 18px; background: rgba(255,255,255,0.85);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; z-index: 10;
+  }
+  #minimap-expand svg { width: 11px; height: 11px; color: #333; }
+
+  /* Scale bar */
+  .leaflet-control-scale { margin-left: 140px !important; margin-bottom: 10px !important; }
+  .leaflet-control-scale-line {
+    background: rgba(255,255,255,0.88) !important;
+    border-color: #555 !important;
+    font-family: 'Source Sans 3', sans-serif !important; font-size: 10px !important;
+  }
+  .leaflet-control-attribution { display: none !important; }
+  .leaflet-control-zoom { display: none !important; }
+
+  /* Coords */
+  #coords {
+    position: absolute; bottom: 8px; left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000; background: rgba(255,255,255,0.9);
+    padding: 3px 12px; border-radius: 4px;
+    font-size: 11px; color: #444; font-weight: 600;
+    box-shadow: 0 1px 5px rgba(0,0,0,0.15);
+    font-family: 'Source Sans 3', monospace;
+    pointer-events: none;
+  }
+
+  /* ── RIGHT PANEL ── */
+  #right-panel {
+    position: absolute;
+    top: var(--top-h); right: 0; width: var(--panel-w); bottom: 0;
+    background: white; z-index: 900;
+    display: flex; flex-direction: column;
+    box-shadow: -3px 0 20px rgba(0,0,0,0.12);
+    border-left: 1px solid var(--gray-border);
+  }
+
+  /* Map type selector */
+  #map-type-bar {
+    background: white; padding: 10px 14px;
+    border-bottom: 1px solid var(--gray-border);
+    flex-shrink: 0;
+  }
+  .map-type-label {
+    font-size: 11px; font-weight: 700; color: var(--gray-muted);
+    text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px;
+  }
+  .map-type-scroll {
+    display: flex; gap: 8px; overflow-x: auto; padding-bottom: 2px;
+  }
+  .map-type-scroll::-webkit-scrollbar { height: 3px; }
+  .map-type-scroll::-webkit-scrollbar-thumb { background: #ccc; border-radius: 2px; }
+  .map-thumb {
+    flex-shrink: 0; width: 64px; cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+  }
+  .map-thumb-img {
+    width: 64px; height: 48px; border-radius: 5px;
+    overflow: hidden; border: 2.5px solid transparent; transition: border-color 0.15s;
+    display: flex; align-items: center; justify-content: center; font-size: 22px;
+    background: #e8f0fe;
+  }
+  .map-thumb.active .map-thumb-img { border-color: var(--teal); }
+  .map-thumb-name { font-size: 10px; color: #555; text-align: center; font-weight: 600; line-height: 1.2; }
+
+  /* Explore / Build tabs */
+  #panel-tabs {
+    display: flex; border-bottom: 1px solid var(--gray-border); flex-shrink: 0;
+  }
+  .p-tab {
+    flex: 1; padding: 9px; text-align: center; font-size: 12.5px; font-weight: 700;
+    color: var(--gray-muted); cursor: pointer; border-bottom: 3px solid transparent;
+    transition: all 0.15s; letter-spacing: 0.2px;
+  }
+  .p-tab.active { color: var(--teal); border-bottom-color: var(--teal); }
+
+  /* Layer search */
+  #layer-search-wrap {
+    padding: 10px 12px; border-bottom: 1px solid var(--gray-border); flex-shrink: 0;
+  }
+  .layer-search-box {
+    display: flex; align-items: center; gap: 6px;
+    border: 1.5px solid var(--gray-border); border-radius: 6px;
+    padding: 6px 10px;
+  }
+  .layer-search-box svg { width: 14px; height: 14px; color: #bbb; flex-shrink: 0; }
+  .layer-search-box input {
+    flex: 1; border: none; outline: none; font-size: 12.5px;
+    font-family: 'Source Sans 3', sans-serif; color: #333;
+  }
+  .layer-search-box input::placeholder { color: #bbb; }
+
+  /* Layer list */
+  #layer-list {
+    flex: 1; overflow-y: auto; padding: 4px 0;
+  }
+  #layer-list::-webkit-scrollbar { width: 4px; }
+  #layer-list::-webkit-scrollbar-thumb { background: #d0d0d0; border-radius: 2px; }
+
+  .layer-category {
+    border-bottom: 1px solid var(--gray-border);
+  }
+  .layer-cat-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 14px; cursor: pointer;
+    transition: background 0.12s; user-select: none;
+  }
+  .layer-cat-header:hover { background: var(--teal-bg); }
+  .layer-cat-left { display: flex; align-items: center; gap: 9px; }
+  .layer-cat-name { font-size: 13px; font-weight: 600; color: #2d3748; }
+  .layer-cat-icon { width: 20px; height: 20px; color: var(--teal); flex-shrink: 0; }
+  .layer-badge {
+    background: var(--teal); color: white; font-size: 10px; font-weight: 700;
+    min-width: 18px; height: 18px; border-radius: 9px;
+    display: flex; align-items: center; justify-content: center; padding: 0 4px;
+  }
+  .chevron {
+    width: 14px; height: 14px; color: #aaa; transition: transform 0.2s; flex-shrink: 0;
+  }
+  .chevron.open { transform: rotate(90deg); }
+
+  .layer-cat-body { display: none; padding: 0 0 4px 0; }
+  .layer-cat-body.open { display: block; }
+
+  .layer-item-row {
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 14px 7px 36px; cursor: pointer;
+    transition: background 0.12s; font-size: 12.5px; color: var(--gray-text);
+  }
+  .layer-item-row:hover { background: #f7faff; }
+  .layer-item-row input[type=checkbox] { accent-color: var(--teal); cursor: pointer; }
+ .layer-symbol {
+    width: 16px; height: 16px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.15)); /* Sombra para resaltar */
+  }
+  .layer-symbol svg { width: 100%; height: 100%; }
+
+  /* Toast */
+  #toast {
+    position: fixed; bottom: 70px; left: calc(50% - var(--panel-w)/2);
+    transform: translateX(-50%) translateY(16px);
+    background: rgba(10,30,60,0.92); color: white;
+    padding: 10px 22px; border-radius: 22px;
+    font-size: 13px; font-weight: 600; z-index: 9999;
+    opacity: 0; transition: all 0.28s; pointer-events: none; white-space: nowrap;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.3);
+  }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* Context menu */
+  #ctx-menu {
+    position: absolute; background: white; border-radius: 8px;
+    box-shadow: var(--shadow-lg); z-index: 2000; padding: 6px 0; min-width: 200px;
+    display: none; font-family: 'Source Sans 3', sans-serif;
+    border: 1px solid var(--gray-border);
+  }
+  .ctx-item {
+    padding: 8px 16px; font-size: 12.5px; color: #333; cursor: pointer;
+    display: flex; align-items: center; gap: 10px; transition: background 0.12s;
+  }
+  .ctx-item:hover { background: var(--teal-bg); color: var(--teal); }
+  .ctx-item svg { width: 15px; height: 15px; color: var(--teal); }
+  .ctx-sep { height: 1px; background: #eee; margin: 4px 0; }
+
+  /* Measure result */
+  #measure-float {
+    position: absolute; bottom: 50px; left: 50%; transform: translateX(-50%);
+    z-index: 1000; background: white;
+    padding: 8px 20px; border-radius: 22px;
+    font-size: 13px; font-weight: 700; color: var(--blue);
+    box-shadow: var(--shadow-lg); display: none;
+    border: 2px solid var(--teal);
+  }
+
+  /* ── MATRICULA BUTTON ── */
+  #btn-matricula {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--teal); border: none; border-radius: 20px;
+    color: white; font-family: 'Source Sans 3', sans-serif;
+    font-size: 12px; font-weight: 700; cursor: pointer;
+    padding: 0 14px; height: 36px; white-space: nowrap;
+    margin-left: 8px; flex-shrink: 0;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.2);
+    transition: background 0.15s;
+    letter-spacing: 0.3px;
+  }
+  #btn-matricula:hover { background: var(--teal-light); }
+  #btn-matricula svg { width: 14px; height: 14px; }
+
+  /* ── MATRICULA MODAL ── */
+  #matricula-overlay {
+    position: fixed; inset: 0; background: rgba(10,20,50,0.55);
+    z-index: 5000; display: none; align-items: center; justify-content: center;
+    backdrop-filter: blur(2px);
+  }
+  #matricula-overlay.open { display: flex; }
+  #matricula-modal {
+    background: white; border-radius: 14px; width: 420px; max-width: 94vw;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.28); overflow: hidden;
+    font-family: 'Source Sans 3', sans-serif;
+  }
+  #matricula-header {
+    background: var(--blue); padding: 16px 20px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  #matricula-header h2 {
+    color: white; font-size: 15px; font-weight: 700; margin: 0;
+    display: flex; align-items: center; gap: 8px;
+  }
+  #matricula-header h2 svg { width: 18px; height: 18px; }
+  #matricula-close {
+    background: rgba(255,255,255,0.2); border: none; cursor: pointer;
+    color: white; width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; transition: background 0.15s;
+  }
+  #matricula-close:hover { background: rgba(255,255,255,0.35); }
+  #matricula-body { padding: 20px; }
+  #matricula-body label {
+    display: block; font-size: 12px; font-weight: 700;
+    color: var(--gray-muted); text-transform: uppercase; letter-spacing: 0.7px;
+    margin-bottom: 6px;
+  }
+  #matricula-input-wrap {
+    display: flex; gap: 8px;
+  }
+  #matricula-input {
+    flex: 1; border: 2px solid var(--gray-border); border-radius: 8px;
+    padding: 9px 14px; font-size: 14px; font-family: 'Source Sans 3', sans-serif;
+    outline: none; transition: border-color 0.15s; color: #333;
+    letter-spacing: 0.5px;
+  }
+  #matricula-input:focus { border-color: var(--teal); }
+  #matricula-input::placeholder { color: #bbb; }
+  #btn-buscar-matricula {
+    background: var(--blue); color: white; border: none;
+    border-radius: 8px; padding: 9px 18px; font-size: 13px;
+    font-weight: 700; cursor: pointer; font-family: 'Source Sans 3', sans-serif;
+    transition: background 0.15s; white-space: nowrap;
+  }
+  #btn-buscar-matricula:hover { background: var(--blue-dark); }
+  #btn-buscar-matricula:disabled { background: #aaa; cursor: not-allowed; }
+  #matricula-hint {
+    font-size: 11px; color: var(--gray-muted); margin-top: 6px;
+  }
+  #matricula-result {
+    margin-top: 16px; display: none;
+  }
+  #matricula-result-card {
+    border: 1.5px solid var(--gray-border); border-radius: 10px; overflow: hidden;
+  }
+  #matricula-result-header {
+    background: var(--teal-bg); padding: 10px 14px;
+    font-size: 12px; font-weight: 700; color: var(--teal);
+    text-transform: uppercase; letter-spacing: 0.6px;
+    border-bottom: 1px solid var(--gray-border);
+    display: flex; align-items: center; gap: 6px;
+  }
+  #matricula-result-header svg { width: 14px; height: 14px; }
+  .mres-row {
+    display: flex; padding: 8px 14px; border-bottom: 1px solid #f0f0f0;
+    font-size: 12.5px; gap: 8px;
+  }
+  .mres-row:last-child { border-bottom: none; }
+  .mres-label { color: var(--gray-muted); font-weight: 600; min-width: 130px; flex-shrink: 0; }
+  .mres-value { color: #2d3748; font-weight: 400; word-break: break-all; }
+  #matricula-error {
+    margin-top: 12px; padding: 10px 14px; border-radius: 8px;
+    background: #fff5f5; border: 1.5px solid #fed7d7;
+    color: #c53030; font-size: 12.5px; display: none;
+  }
+  #btn-ir-predio {
+    margin-top: 14px; width: 100%; padding: 10px;
+    background: var(--teal); color: white; border: none; border-radius: 8px;
+    font-size: 13px; font-weight: 700; cursor: pointer;
+    font-family: 'Source Sans 3', sans-serif; transition: background 0.15s;
+    display: none;
+  }
+  #btn-ir-predio:hover { background: #009ab0; }
+  #matricula-spinner {
+    display: none; text-align: center; padding: 20px 0; color: var(--gray-muted);
+    font-size: 13px;
+  }
+
+  /* Tabla usos del suelo */
+  #usos-table {
+    width: 100%; border-collapse: collapse;
+    font-size: 11.5px; font-family: 'Source Sans 3', sans-serif;
+  }
+  #usos-table thead tr {
+    background: var(--blue); color: white;
+  }
+  #usos-table th {
+    padding: 7px 10px; text-align: left; font-weight: 700;
+    font-size: 11px; letter-spacing: 0.4px;
+  }
+  #usos-table td {
+    padding: 7px 10px; border-bottom: 1px solid #f0f0f0;
+    color: #2d3748; vertical-align: top;
+  }
+  #usos-table tbody tr:hover { background: var(--teal-bg); }
+  #usos-table tbody tr:last-child td { border-bottom: none; }
+  .uso-badge {
+    display: inline-block; padding: 2px 8px; border-radius: 10px;
+    font-size: 10.5px; font-weight: 700; white-space: nowrap;
+    background: var(--teal-bg); color: var(--teal);
+    border: 1px solid rgba(0,180,200,0.3);
+  }
+  .pct-bar-wrap {
+    display: flex; align-items: center; gap: 5px;
+  }
+  .pct-bar {
+    height: 6px; border-radius: 3px; background: var(--teal);
+    min-width: 4px; flex-shrink: 0;
+  }
+  #matricula-result-titulo { font-weight: 700; }
+  #matricula-modal { width: 520px; max-height: 90vh; display: flex; flex-direction: column; }
+  #matricula-body {
+    padding: 20px;
+    overflow-y: auto;
+    flex: 1;
+  }
+  #matricula-body::-webkit-scrollbar { width: 5px; }
+  #matricula-body::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
+
+  /* Botón PDF */
+  #btn-descargar-pdf {
+    margin-top: 10px; width: 100%; padding: 10px;
+    background: var(--blue); color: white; border: none; border-radius: 8px;
+    font-size: 13px; font-weight: 700; cursor: pointer;
+    font-family: 'Source Sans 3', sans-serif; transition: background 0.15s;
+    display: none; align-items: center; justify-content: center; gap: 6px;
+  }
+  #btn-descargar-pdf:hover { background: var(--blue-dark); }
+  #btn-descargar-pdf svg { width: 15px; height: 15px; }
+
+  /* Panel derecho colapsable */
+  #panel-toggle {
+    position: absolute;
+    top: calc(var(--top-h) + 50%);
+    right: var(--panel-w);
+    transform: translateY(-50%);
+    z-index: 1050;
+    width: 20px; height: 48px;
+    background: white;
+    border: 1px solid var(--gray-border);
+    border-right: none;
+    border-radius: 6px 0 0 6px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    box-shadow: -3px 0 8px rgba(0,0,0,0.1);
+    transition: right 0.3s ease, background 0.15s;
+  }
+  #panel-toggle:hover { background: var(--teal-bg); }
+  #panel-toggle svg { width: 13px; height: 13px; color: var(--teal); transition: transform 0.3s; }
+  #panel-toggle.collapsed svg { transform: rotate(180deg); }
+
+  /* Transición panel y mapa */
+  #right-panel {
+    transition: transform 0.3s ease, width 0.3s ease;
+  }
+  #right-panel.collapsed {
+    transform: translateX(var(--panel-w));
+  }
+  #map {
+    transition: right 0.3s ease;
+  }
+  #map.expanded { right: 0; }
+
+  /* Search suggestions */
+  #search-suggestions {
+    position: absolute; top: calc(var(--top-h) + 4px); left: 70px;
+    background: white; border-radius: 10px; box-shadow: var(--shadow-lg);
+    z-index: 2000; max-width: 380px; width: calc(100% - 80px);
+    display: none; overflow: hidden; max-height: 260px; overflow-y: auto;
+  }
+  .suggestion-item {
+    padding: 9px 16px; font-size: 13px; cursor: pointer;
+    display: flex; align-items: center; gap: 10px;
+    border-bottom: 1px solid #f0f0f0; transition: background 0.12s;
+    color: #333;
+  }
+  .suggestion-item:hover { background: var(--teal-bg); }
+  .suggestion-item svg { width: 14px; height: 14px; color: var(--teal); flex-shrink: 0; }
+
+  /* Popup */
+  .leaflet-popup-content-wrapper {
+    border-radius: 10px !important; box-shadow: var(--shadow-lg) !important;
+    font-family: 'Source Sans 3', sans-serif !important;
+  }
+  .leaflet-popup-content { margin: 12px 16px !important; font-size: 13px !important; }
+  .popup-title { font-weight: 700; color: var(--blue); font-size: 14px; margin-bottom: 4px; }
+  .popup-coords { color: #888; font-size: 11.5px; }
+
+  /* Right panel top icons row */
+  #panel-top-icons {
+    display: flex; align-items: center; gap: 4px;
+    padding: 8px 12px; border-bottom: 1px solid var(--gray-border);
+    flex-shrink: 0;
+  }
+  .pti {
+    width: 34px; height: 34px; border-radius: 50%;
+    background: var(--gray-light); border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s; position: relative;
+  }
+  .pti:hover, .pti.active { background: var(--teal-bg); }
+  .pti svg { width: 16px; height: 16px; color: var(--teal); }
+  .pti::after {
+    content: attr(data-tip); position: absolute; bottom: -26px; left: 50%;
+    transform: translateX(-50%); background: rgba(10,30,60,0.88); color: white;
+    font-size: 11px; padding: 3px 8px; border-radius: 4px; white-space: nowrap;
+    pointer-events: none; opacity: 0; transition: opacity 0.15s; z-index: 100;
+    font-family: 'Source Sans 3', sans-serif; font-weight: 600;
+  }
+  .pti:hover::after { opacity: 1; }
+
+ /* ── LEYENDA FLOTANTE (DISEÑO INTEGRADO) ── */
+  #map-legend {
+    position: absolute;
+    top: calc(var(--top-h) + 16px); /* Se alinea perfecto debajo de la barra superior */
+    left: 70px; /* Se ubica al lado de los botones de herramientas */
+    z-index: 2000;
+    background: white;
+    border-radius: 12px;
+    width: 320px;
+    box-shadow: var(--shadow-lg);
+    font-family: 'Source Sans 3', sans-serif;
+    display: none;
+    flex-direction: column;
+    border: 1px solid var(--gray-border);
+    overflow: hidden;
+  }
+  #map-legend.show { display: flex; }
+  
+  #legend-header {
+    padding: 12px 16px;
+    background: var(--blue); /* Azul institucional */
+    color: white;
+    cursor: grab;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    user-select: none;
+  }
+  #legend-header:active { cursor: grabbing; }
+  
+  #legend-header-title {
+    display: flex; align-items: center; gap: 8px;
+    font-weight: 700; font-size: 14px;
+  }
+  #legend-header-title svg { width: 16px; height: 16px; }
+
+ /* Botones del header de la leyenda */
+  #legend-toggle, #legend-close {
+    cursor: pointer; font-size: 14px;
+    background: rgba(255,255,255,0.2);
+    width: 26px; height: 26px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s;
+  }
+  #legend-toggle:hover, #legend-close:hover { background: rgba(255,255,255,0.35); }
+  
+  /* Animación y estado minimizado */
+  #legend-toggle svg { width: 14px; height: 14px; transition: transform 0.3s ease; }
+  #legend-toggle.minimized svg { transform: rotate(180deg); }
+  #legend-content.minimized { display: none; }
+  
+  #legend-content {
+    padding: 16px;
+    max-height: 40vh; /* Se adapta a pantallas pequeñas */
+    overflow-y: auto;
+  }
+  #legend-content::-webkit-scrollbar { width: 5px; }
+  #legend-content::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
+
+  .leg-section { margin-bottom: 18px; }
+  .leg-section:last-child { margin-bottom: 0; }
+  .leg-title {
+    font-size: 11.5px;
+    color: var(--gray-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 12px;
+    font-weight: 700;
+    border-bottom: 1px solid var(--gray-border);
+    padding-bottom: 6px;
+  }
+  .leg-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    font-size: 12.5px;
+    color: var(--gray-text);
+    font-weight: 600;
+  }
+  .leg-color {
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    flex-shrink: 0;
+    border: 1px solid rgba(0,0,0,0.1);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1); /* Sutil sombra a los colores */
+  }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div id="topbar">
+  <div id="topbar-logo">
+    <div class="logo-circle"><img src="logo.png" style="width:100%;height:100%;object-fit:contain;border-radius:50%;"></div>
+    <div>
+      <div class="logo-text">Geo-Ceja</div>
+      <span class="logo-sub">La Ceja del Tambo</span>
+    </div>
+  </div>
+
+  <div id="search-bar">
+    <div class="user-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    </div>
+    <input id="search-input-top" type="text" placeholder="Buscar en Geo-Ceja…" oninput="onSearchType(this.value)" onkeyup="if(event.key==='Enter')doSearch(this.value)"/>
+    <button class="search-icon-btn" onclick="doSearch(document.getElementById('search-input-top').value)">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    </button>
+    <button class="filter-btn" onclick="showToast('Filtros avanzados próximamente')">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6" stroke-linecap="round" stroke-width="3"/><line x1="3" y1="12" x2="3.01" y2="12" stroke-linecap="round" stroke-width="3"/><line x1="3" y1="18" x2="3.01" y2="18" stroke-linecap="round" stroke-width="3"/></svg>
+    </button>
+  </div>
+
+  <!-- BOTÓN MATRÍCULA -->
+  <button id="btn-matricula" onclick="abrirBusquedaMatricula()">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+    Buscar Predio
+  </button>
+
+  <div id="topbar-right">
+    <!--<button class="top-pill" onclick="showToast('Portales disponibles próximamente')">Portales</button>
+    <button class="top-icon-btn" data-tip="Tour" onclick="showToast('Tour del visor')">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+    </button>
+    <button class="top-icon-btn" onclick="showToast('Galería de mapas')">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+    </button>
+    <button class="top-icon-btn" onclick="showToast('Capas adicionales')">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+    </button>  PROXIMAMENTE SE PODRÁ EN FUNCIONAMIENOT PARA LAS PERSONAS.--> 
+    <div class="top-institution">
+      <strong>Alcaldía de La Ceja del Tambo</strong>
+      Observatorio Municiapl
+    </div>
+  </div>
+</div>
+
+<!-- POP-UP DE LEYENDA EN MAPA-->
+<div id="map-legend">
+  <div id="legend-header">
+    <div id="legend-header-title">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+        <rect x="3" y="3" width="7" height="7" />
+        <rect x="14" y="3" width="7" height="7" />
+        <rect x="3" y="14" width="7" height="7" />
+        <path d="M14 17h7M14 21h4" />
+      </svg>
+      Leyenda del Mapa
+    </div>
+    <div style="display:flex; gap:6px; align-items:center;">
+      <span id="legend-toggle" onclick="toggleLegendContent()" title="Minimizar/Expandir">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+          stroke-width="2.5">
+          <polyline points="18 15 12 9 6 15" />
+        </svg>
+      </span>
+      <span id="legend-close" onclick="document.getElementById('map-legend').classList.remove('show')"
+        title="Ocultar leyenda">✕</span>
+    </div>
+  </div>
+  <div id="legend-content"></div>
+</div>
+
+<!-- MAP -->
+<div id="map"></div>
+
+<!-- SEARCH SUGGESTIONS -->
+<div id="search-suggestions"></div>
+
+<!-- LEFT TOOLS (top) -->
+<div id="left-tools">
+  <button class="lt-btn" data-tip="Mi ubicación" onclick="goMyLocation()">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
+  </button>
+
+  <button class="lt-btn" data-tip="Medir distancia" onclick="startMeasure('distance')">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M2 12h20M5 8l-3 4 3 4M19 8l3 4-3 4"/></svg>
+  </button>
+  <button class="lt-btn" data-tip="Medir área" onclick="startMeasure('area')">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>
+  </button>
+  <button class="lt-btn" data-tip="Ir al inicio" onclick="map.setView([6.027,-75.418],11)">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+  </button>
+  <button class="lt-btn" data-tip="Compartir" onclick="shareMap()">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+  </button>
+  <button class="lt-btn" data-tip="Ayuda" onclick="showToast('Ayuda y documentación del visor')">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17" stroke-width="3" stroke-linecap="round"/></svg>
+  </button>
+</div>
+
+<!-- ZOOM -->
+<div id="left-zoom">
+  <button class="lz-btn" onclick="map.zoomIn()">+</button>
+  <button class="lz-btn" onclick="map.zoomOut()">−</button>
+</div>
+
+<!-- MINI MAP -->
+<div id="minimap-wrap" onclick="showToast('Mapa de referencia')">
+  <div id="minimap"></div>
+  <div id="minimap-expand">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+  </div>
+</div>
+
+<!-- COORDS -->
+<div id="coords">75°25'4.80" W · 6°1'37.20" N</div>
+
+<!-- MEASURE FLOAT -->
+<div id="measure-float">📏 <span id="measure-val">0 m</span> — Doble clic para terminar</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- CONTEXT MENU -->
+<div id="ctx-menu">
+  <div class="ctx-item" onclick="ctxZoomIn()">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>Acercar aquí</div>
+  <div class="ctx-item" onclick="ctxZoomOut()">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>Alejar aquí</div>
+  <div class="ctx-sep"></div>
+  <div class="ctx-item" onclick="ctxAddMarker()">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Agregar marcador</div>
+  <div class="ctx-item" onclick="ctxCopyCoords()">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copiar coordenadas</div>
+  <div class="ctx-item" onclick="startMeasure('distance');hideCtxMenu()">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M2 12h20M5 8l-3 4 3 4M19 8l3 4-3 4"/></svg>Medir desde aquí</div>
+  <div class="ctx-sep"></div>
+  <div class="ctx-item" onclick="hideCtxMenu()">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Cerrar menú</div>
+</div>
+
+<!-- RIGHT PANEL -->
+<div id="right-panel">
+  <!-- Map type selector -->
+  <div id="map-type-bar">
+    <div class="map-type-label">Tipo de Mapa</div>
+    <div class="map-type-scroll">
+      <div class="map-thumb active" id="mt-satellite" onclick="setBasemap('satellite','mt-satellite')">
+        <div class="map-thumb-img">🛰</div>
+        <div class="map-thumb-name">Ortofoto 2024</div>
+      </div>
+      <div class="map-thumb" id="mt-topo" onclick="setBasemap('topo','mt-topo')">
+        <div class="map-thumb-img">🏔</div>
+        <div class="map-thumb-name">Topográfico</div>
+      </div>
+      <div class="map-thumb" id="mt-osm" onclick="setBasemap('osm','mt-osm')">
+        <div class="map-thumb-img">🗺</div>
+        <div class="map-thumb-name">OSM</div>
+      </div>
+      <div class="map-thumb" id="mt-dark" onclick="setBasemap('dark','mt-dark')">
+        <div class="map-thumb-img" style="background:#1a2030">🌙</div>
+        <div class="map-thumb-name">Oscuro</div>
+      </div>
+      <div class="map-thumb" id="mt-light" onclick="setBasemap('light','mt-light')">
+        <div class="map-thumb-img" style="background:#f0f0f0">☀️</div>
+        <div class="map-thumb-name">Claro</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div id="panel-tabs">
+    <div class="p-tab active" onclick="switchTab(this,'explore')">Explorar Mapa</div>
+    <!--<div class="p-tab" onclick="switchTab(this,'build')">Armar Mapa</div>-->
+  </div>
+
+  <!-- Top icons row -->
+  <div id="panel-top-icons">
+
+    <!--<button class="pti" data-tip="Leyenda" onclick="showToast('Leyenda del mapa')">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 17h7M14 21h4"/></svg>
+    </button>-->
+
+    <button class="pti" data-tip="Compartir" onclick="shareMap()">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+    </button>
+    <button class="pti" data-tip="Limpiar" onclick="clearAll()">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+    </button>
+  </div>
+
+  <!-- Layer search -->
+  <div id="layer-search-wrap">
+    <div class="layer-search-box">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>
+      <input type="text" placeholder="Buscar capas" oninput="filterLayers(this.value)"/>
+    </div>
+  </div>
+
+  <!-- Layer list -->
+  <div id="layer-list">
+    <!-- Categories generated by JS -->
+  </div>
+</div>
+
+<!-- MODAL BÚSQUEDA POR MATRÍCULA -->
+<div id="matricula-overlay" onclick="cerrarModalMatricula(event)">
+  <div id="matricula-modal">
+    <div id="matricula-header">
+      <h2>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        Consulta de Predio por Matrícula
+      </h2>
+      <button id="matricula-close" onclick="cerrarModalMatricula()">✕</button>
+    </div>
+    <div id="matricula-body">
+      <label for="matricula-input">Número de Matrícula Inmobiliaria</label>
+      <div id="matricula-input-wrap">
+        <input id="matricula-input" type="text" placeholder="Ej: 123456" maxlength="30"
+          onkeyup="if(event.key==='Enter') buscarPorMatricula()" autocomplete="off" spellcheck="false"/>
+        <button id="btn-buscar-matricula" onclick="buscarPorMatricula()">Buscar</button>
+      </div>
+      <p id="matricula-hint">Aplica para predios urbanos y rurales registrados en el catastro municipal.</p>
+
+      <div id="matricula-spinner">
+        ⏳ Consultando base de datos, espera por favor..
+      </div>
+      <div id="matricula-error"></div>
+      <div id="matricula-result">
+        <!-- Encabezado del predio -->
+        <div id="matricula-result-card">
+          <div id="matricula-result-header">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            <span id="matricula-result-titulo">Predio encontrado</span>
+          </div>
+          <!-- Tabla de usos del suelo -->
+          <div style="overflow-x:auto;">
+            <table id="usos-table">
+              <thead>
+                <tr>
+                  <th>Tipo de suelo</th>
+                  <th>Descripción</th>
+                  <th>Área (m²)</th>
+                  <th>%</th>
+                </tr>
+              </thead>
+              <tbody id="usos-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+        <button id="btn-ir-predio" onclick="irAlPredioBuscado()">
+          📍 Ver figura catastral en el mapa
+        </button>
+        <button id="btn-descargar-pdf" onclick="descargarInformePDF()">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          Descargar Informe PDF
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOGGLE PANEL DERECHO -->
+<div id="panel-toggle" onclick="toggleRightPanel()" title="Mostrar/Ocultar panel">
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+</div>
+
+<script>
+// ── SUPABASE CONFIG ──────────────────────────────────────────────────────────
+// 🔧 Solo reemplaza estos dos valores con los de tu proyecto Supabase:
+const SUPABASE_URL      = 'https://rbzinkvdlgqladjtgpft.supabase.co';  // ← URL de tu proyecto
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJiemlua3ZkbGdxbGFkanRncGZ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg3MjczNDYsImV4cCI6MjA5NDMwMzM0Nn0.57dZ0_0oOJ2mzh8zdyb7KrpI8z70FcTJCX5GWq4hQ0k';                 // ← Anon key
+// ────────────────────────────────────────────────────────────────────────────
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ESTRUCTURA REAL DE SUPABASE:
+//
+// URBANO:
+//   · matricula está en tabla "urbano" (columna: matricula, id)
+//   · usos del suelo en "resultado_uso_predio" (columna: predio_id, tipo_suelo, area_m2, porcentaje, geom WKB)
+//   · geom está en "resultado_uso_predio" — se une por urbano.id = resultado_uso_predio.predio_id
+//
+// RURAL:
+//   · matricula + usos en "resultado_uso_predio_rural" (columna: matricula, predio_id, tipo_suelo, area_m2, porcentaje)
+//   · geom está en "Rural" — se une por resultado_uso_predio_rural.predio_id = Rural.id
+// ─────────────────────────────────────────────────────────────────────────────
+
+let predioLayer   = null;
+let predioGeojson = null;
+let predioData    = {};  // datos del predio para el PDF
+
+// ── Abrir / cerrar modal ──
+function abrirBusquedaMatricula() {
+  document.getElementById('matricula-overlay').classList.add('open');
+  setTimeout(() => document.getElementById('matricula-input').focus(), 80);
+}
+function cerrarModalMatricula(e) {
+  if (e && e.target !== document.getElementById('matricula-overlay')) return;
+  document.getElementById('matricula-overlay').classList.remove('open');
+}
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') document.getElementById('matricula-overlay').classList.remove('open');
+});
+
+// ── Búsqueda principal ──
+async function buscarPorMatricula() {
+  const matricula = document.getElementById('matricula-input').value.trim();
+  if (!matricula) { mostrarErrorMatricula('Por favor ingresa un número de matrícula.'); return; }
+
+  if (SUPABASE_URL.includes('TU_PROYECTO') || SUPABASE_ANON_KEY.includes('TU_ANON_KEY')) {
+    mostrarErrorMatricula('⚠️ Debes configurar SUPABASE_URL y SUPABASE_ANON_KEY en el código antes de usar esta función.');
+    return;
+  }
+
+  ocultarResultado();
+  document.getElementById('matricula-spinner').style.display = 'block';
+  document.getElementById('btn-buscar-matricula').disabled = true;
+  predioGeojson = null;
+
+  try {
+    // ── URBANO ──
+    // 1a. Buscar el id del predio en tabla "urbano" por matrícula
+    const urbanoReg = await sbFetch(`urbano?matricula=eq.${encodeURIComponent(matricula)}&select=id&limit=1`);
+
+    if (urbanoReg && urbanoReg.length > 0) {
+      const predioId = urbanoReg[0].id;
+      // 1b. Traer usos del suelo
+      const usos = await sbFetch(`resultado_uso_predio?predio_id=eq.${predioId}&order=porcentaje.desc`);
+      if (!usos || usos.length === 0) {
+        mostrarErrorMatricula(`Predio urbano encontrado pero sin usos de suelo registrados.`);
+        return;
+      }
+      // 1c. Traer datos completos del predio para el PDF
+      const datosUrb = await sbFetch(`urbano?id=eq.${predioId}&select=matricula,nup,primer_ape,segundo_ap,area_terr,ficha,direccion&limit=1`);
+      predioData = datosUrb ? datosUrb[0] : {};
+      predioData._tipo = 'Urbano';
+      // 1d. Geometría — corregir coordenadas invertidas
+      predioGeojson = await fetchGeomDesdeResultadoUrbano(predioId);
+      mostrarUsosPredi(matricula, usos, false);
+      return;
+    }
+
+    // ── RURAL ──
+    const usosRural = await sbFetch(`resultado_uso_predio_rural?matricula=eq.${encodeURIComponent(matricula)}&order=porcentaje.desc`);
+
+    if (usosRural && usosRural.length > 0) {
+      const predioId = usosRural[0].predio_id;
+      // Traer datos completos desde Rural
+      const datosRural = await sbFetch(`Rural?id=eq.${predioId}&select=matricula,nup,primer_ape,segundo_ap,area_terr,ficha,direccion&limit=1`);
+      predioData = datosRural ? datosRural[0] : {};
+      predioData._tipo = 'Rural';
+      // Geometría Rural
+      predioGeojson = await fetchGeomDesdeRural(predioId);
+      mostrarUsosPredi(matricula, usosRural, true);
+      return;
+    }
+
+    // No encontrado en ninguna tabla
+    mostrarErrorMatricula(`No se encontró ningún predio con matrícula <strong>${matricula}</strong>.`);
+
+  } catch (err) {
+    mostrarErrorMatricula('Error al conectar con Supabase: ' + err.message);
+  } finally {
+    document.getElementById('matricula-spinner').style.display = 'none';
+    document.getElementById('btn-buscar-matricula').disabled = false;
+  }
+}
+
+// Helper base para fetch a Supabase REST API
+async function sbFetch(endpoint) {
+  const url = `${SUPABASE_URL}/rest/v1/${endpoint}`;
+  const res = await fetch(url, {
+    headers: {
+      'apikey': SUPABASE_ANON_KEY,
+      'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+      'Accept': 'application/json'
+    }
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status} en /${endpoint}`);
+  const data = await res.json();
+  return Array.isArray(data) && data.length > 0 ? data : null;
+}
+
+// Corrige coordenadas si están en orden X,Y (lng,lat) cuando deberían ser lat,lng
+// PostGIS con SRID 4326 devuelve [lng, lat] que es lo correcto para GeoJSON — pero si el
+// dato original fue cargado con las coordenadas invertidas, necesitamos flipearlas.
+// Detectamos: si la primera coordenada X > 0 y Y < 0 estamos en Colombia → están invertidas
+function corregirCoordenadas(geojson) {
+  if (!geojson) return null;
+  function flipCoord(c) {
+    // Colombia: lat entre 4 y 8, lng entre -77 y -72
+    // Si llegan como [lat, lng] → x~6, y~-75 → x es positivo pequeño, y negativo
+    // Si llegan correctos [lng, lat] → x~-75, y~6 → x negativo, y positivo pequeño
+    // Detectar: si abs(x) < 20 && y < -20 → están invertidos
+    if (Math.abs(c[0]) < 20 && c[1] < -20) return [c[1], c[0]];
+    return c;
+  }
+  function flipRing(ring) { return ring.map(flipCoord); }
+  function flipGeom(g) {
+    if (!g) return g;
+    if (g.type === 'Point') return {...g, coordinates: flipCoord(g.coordinates)};
+    if (g.type === 'LineString') return {...g, coordinates: g.coordinates.map(flipCoord)};
+    if (g.type === 'Polygon') return {...g, coordinates: g.coordinates.map(flipRing)};
+    if (g.type === 'MultiPolygon') return {...g, coordinates: g.coordinates.map(poly => poly.map(flipRing))};
+    if (g.type === 'MultiLineString') return {...g, coordinates: g.coordinates.map(flipRing)};
+    return g;
+  }
+  return flipGeom(geojson);
+}
+
+async function fetchGeomDesdeResultadoUrbano(predioId) {
+  const url = `${SUPABASE_URL}/rest/v1/resultado_uso_predio?predio_id=eq.${predioId}&select=geom&limit=1`;
+  const res = await fetch(url, {
+    headers: {
+      'apikey': SUPABASE_ANON_KEY,
+      'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+      'Accept': 'application/geo+json'
+    }
+  });
+  if (!res.ok) return null;
+  const data = await res.json();
+  if (data.type === 'FeatureCollection' && data.features && data.features.length > 0) {
+    return corregirCoordenadas(data.features[0].geometry);
+  }
+  return null;
+}
+
+async function fetchGeomDesdeRural(predioId) {
+  const url = `${SUPABASE_URL}/rest/v1/Rural?id=eq.${predioId}&select=geom&limit=1`;
+  const res = await fetch(url, {
+    headers: {
+      'apikey': SUPABASE_ANON_KEY,
+      'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+      'Accept': 'application/geo+json'
+    }
+  });
+  if (!res.ok) return null;
+  const data = await res.json();
+  if (data.type === 'FeatureCollection' && data.features && data.features.length > 0) {
+    return corregirCoordenadas(data.features[0].geometry);
+  }
+  return null;
+}
+
+// ── Renderizar tabla de usos del suelo ──
+function mostrarUsosPredi(matricula, usos, esRural) {
+  document.getElementById('matricula-error').style.display = 'none';
+
+  const tipo = esRural ? '🌾 Rural' : '🏙 Urbano';
+  document.getElementById('matricula-result-titulo').innerHTML =
+    `${tipo} &nbsp;·&nbsp; Matrícula <strong>${matricula}</strong>`;
+
+  const tbody = document.getElementById('usos-tbody');
+  tbody.innerHTML = '';
+
+  usos.forEach(u => {
+    const pct = parseFloat(u.porcentaje) || 0;
+    const area = u.area_m2 != null ? Number(u.area_m2).toLocaleString('es-CO', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '—';
+    const barW = Math.min(Math.round(pct), 100);
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><span class="uso-badge">${u.tipo_suelo || '—'}</span></td>
+      <td>${u.descripcion || '—'}</td>
+      <td style="text-align:right">${area}</td>
+      <td>
+        <div class="pct-bar-wrap">
+          <div class="pct-bar" style="width:${barW}px"></div>
+          <span style="font-size:11px;color:#555;white-space:nowrap">${pct.toFixed(1)}%</span>
+        </div>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+
+  document.getElementById('matricula-result').style.display = 'block';
+
+  if (!predioGeojson) {
+    document.getElementById('btn-ir-predio').style.display = 'block';
+    document.getElementById('btn-ir-predio').textContent = '⚠️ Geometría no disponible';
+    document.getElementById('btn-ir-predio').disabled = true;
+    document.getElementById('btn-descargar-pdf').style.display = 'none';
+  } else {
+    document.getElementById('btn-ir-predio').disabled = false;
+    document.getElementById('btn-ir-predio').style.display = 'block';
+    document.getElementById('btn-ir-predio').textContent = '📍 Ver figura catastral en el mapa';
+    document.getElementById('btn-descargar-pdf').style.display = 'flex';
+  }
+}
+
+// ── Parsear geometría ──
+function parsearGeometria(geom) {
+  if (!geom) return null;
+  if (typeof geom === 'object') return geom;
+  if (typeof geom === 'string') {
+    try { return JSON.parse(geom); } catch(e) {}
+  }
+  return null;
+}
+
+// ── Ir al predio en el mapa ──
+function irAlPredioBuscado() {
+  if (!predioGeojson) return;
+  if (predioLayer) { map.removeLayer(predioLayer); predioLayer = null; }
+
+  predioLayer = L.geoJSON(predioGeojson, {
+    style: { color: '#00b4c8', weight: 3, fillColor: '#00b4c8', fillOpacity: 0.3 },
+    pointToLayer: (f, ll) => L.circleMarker(ll, { radius: 11, fillColor: '#00b4c8', color: '#fff', weight: 3, fillOpacity: 0.9 })
+  }).addTo(map);
+
+  const bounds = predioLayer.getBounds();
+  if (bounds.isValid()) {
+    map.fitBounds(bounds, { padding: [80, 80], maxZoom: 19 });
+  }
+
+  document.getElementById('matricula-overlay').classList.remove('open');
+  showToast('✅ Figura catastral localizada en el mapa');
+}
+
+// ── Helpers ──
+function mostrarErrorMatricula(msg) {
+  const el = document.getElementById('matricula-error');
+  el.innerHTML = msg; el.style.display = 'block';
+  document.getElementById('matricula-result').style.display = 'none';
+}
+function ocultarResultado() {
+  document.getElementById('matricula-error').style.display = 'none';
+  document.getElementById('matricula-result').style.display = 'none';
+  document.getElementById('btn-descargar-pdf').style.display = 'none';
+}
+
+// ── Toggle panel derecho ──
+let panelVisible = true;
+function toggleRightPanel() {
+  panelVisible = !panelVisible;
+  const panel  = document.getElementById('right-panel');
+  const toggle = document.getElementById('panel-toggle');
+  const mapEl  = document.getElementById('map');
+  panel.classList.toggle('collapsed', !panelVisible);
+  toggle.classList.toggle('collapsed', !panelVisible);
+  mapEl.classList.toggle('expanded', !panelVisible);
+  // Actualizar posición del botón toggle
+  toggle.style.right = panelVisible ? 'var(--panel-w)' : '0';
+  // Forzar redibujado del mapa
+  setTimeout(() => map.invalidateSize(), 320);
+}
+
+// ── Descarga de informe PDF ──
+// 🔧 Configura el enlace y texto del pie del informe PDF:
+const LINK_NORMA_URL   = 'https://www.colombiaot.gov.co/pot/buscador.html?&u=05376&representacion=&tipo=&tags=&dimension=&componente=&year=&pot=';  // ← reemplaza con tu URL
+const LINK_NORMA_TEXTO = 'Consultar información adicional';  // ← texto del enlace
+
+async function descargarInformePDF() {
+  const titulo = document.getElementById('matricula-result-titulo').textContent;
+  const btn = document.getElementById('btn-descargar-pdf');
+  btn.textContent = '⏳ Generando PDF…';
+  btn.disabled = true;
+
+  try {
+    // Asegurar que el polígono esté visible en el mapa antes de capturar
+    if (predioGeojson && !predioLayer) {
+      predioLayer = L.geoJSON(predioGeojson, {
+        style: { color: '#00b4c8', weight: 3, fillColor: '#00b4c8', fillOpacity: 0.3 }
+      }).addTo(map);
+    }
+    if (predioLayer) {
+      const bounds = predioLayer.getBounds();
+      if (bounds.isValid()) map.fitBounds(bounds, { padding: [60, 60], maxZoom: 19 });
+    }
+    // Esperar a que el mapa y las tiles terminen de cargar
+    await new Promise(resolve => {
+      if (map._loaded) {
+        map.once('idle', resolve);
+        setTimeout(resolve, 2500); // fallback por si idle no dispara
+      } else {
+        setTimeout(resolve, 2500);
+      }
+    });
+
+    // Capturar snapshot del mapa como imagen
+    let mapImgDataUrl = null;
+    try {
+      const mapEl = document.getElementById('map');
+      const canvas = await html2canvas(mapEl, {
+        useCORS: true,
+        allowTaint: false,
+        scale: 2,
+        logging: false,
+        imageTimeout: 15000,
+        foreignObjectRendering: false,
+        onclone: (doc) => {
+          // Asegurar que el canvas del mapa de Leaflet sea visible en el clon
+          const clonedMap = doc.getElementById('map');
+          if (clonedMap) clonedMap.style.visibility = 'visible';
+        }
+      });
+      mapImgDataUrl = canvas.toDataURL('image/jpeg', 0.92);
+    } catch(e) { console.warn('No se pudo capturar el mapa:', e); }
+
+    // Recoger filas de la tabla de usos
+    const rows = [];
+    document.querySelectorAll('#usos-tbody tr').forEach(tr => {
+      const celdas = tr.querySelectorAll('td');
+      if (celdas.length >= 3) {
+        rows.push({
+          tipo:  celdas[0].textContent.trim(),
+          desc:  celdas[1].textContent.trim(),
+          area:  celdas[2].textContent.trim(),
+          pct:   celdas[3] ? celdas[3].textContent.trim() : ''
+        });
+      }
+    });
+
+    // Datos del predio para la ficha
+    const d = predioData || {};
+    const areaCat = d.area_terr ? Number(d.area_terr).toLocaleString('es-CO', {minimumFractionDigits: 2}) + ' m²' : 'No registrada';
+    const nup = d.nup || 'No registrado';
+    const ficha = d.ficha || 'No registrada';
+    const direccion = d.direccion || 'No registrada';
+    const zona = d._tipo || '';
+    const matriculaPDF = d.matricula || titulo;
+
+    const fecha = new Date().toLocaleDateString('es-CO', { year:'numeric', month:'long', day:'numeric' });
+
+    const filasHTML = rows.map(r => `
+      <tr>
+        <td style="padding:7px 10px;border-bottom:1px solid #eee;font-size:12px">${r.tipo}</td>
+        <td style="padding:7px 10px;border-bottom:1px solid #eee;font-size:12px">${r.desc}</td>
+        <td style="padding:7px 10px;border-bottom:1px solid #eee;font-size:12px;text-align:right">${r.area}</td>
+        <td style="padding:7px 10px;border-bottom:1px solid #eee;font-size:12px;text-align:right">${r.pct}</td>
+      </tr>`).join('');
+
+    const mapSection = mapImgDataUrl
+      ? `<div style="margin-top:24px">
+           <div class="section-label">Figura Catastral</div>
+           <img src="${mapImgDataUrl}" style="width:100%;border-radius:8px;border:1px solid #e2e8f0;margin-top:6px"/>
+         </div>`
+      : `<p style="color:#888;font-size:12px;margin-top:16px">⚠️ Para incluir el mapa, primero haz clic en "Ver figura catastral" y luego descarga el PDF.</p>`;
+
+    // Ficha del predio en 2 columnas
+    const fichaHTML = `
+      <table style="width:100%;border-collapse:collapse;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden">
+        <tbody>
+          <tr style="background:#f7fafc">
+            <td style="padding:8px 12px;font-size:11px;font-weight:700;color:#718096;width:35%;text-transform:uppercase;letter-spacing:0.5px">Matrícula Inmobiliaria</td>
+            <td style="padding:8px 12px;font-size:13px;font-weight:700;color:#1a4fd6">${matriculaPDF}</td>
+            <td style="padding:8px 12px;font-size:11px;font-weight:700;color:#718096;width:35%;text-transform:uppercase;letter-spacing:0.5px">Zona</td>
+            <td style="padding:8px 12px;font-size:13px;color:#2d3748">${zona}</td>
+          </tr>
+          <tr>
+            <td style="padding:8px 12px;font-size:11px;font-weight:700;color:#718096;text-transform:uppercase;letter-spacing:0.5px">NUP</td>
+            <td style="padding:8px 12px;font-size:13px;color:#2d3748">${nup}</td>
+            <td style="padding:8px 12px;font-size:11px;font-weight:700;color:#718096;text-transform:uppercase;letter-spacing:0.5px">Ficha Catastral</td>
+            <td style="padding:8px 12px;font-size:13px;color:#2d3748">${ficha}</td>
+          </tr>
+          <tr style="background:#f7fafc">
+            <td style="padding:8px 12px;font-size:11px;font-weight:700;color:#718096;text-transform:uppercase;letter-spacing:0.5px">Área Catastral</td>
+            <td style="padding:8px 12px;font-size:13px;color:#2d3748">${areaCat}</td>
+          </tr>
+          <tr>
+            <td style="padding:8px 12px;font-size:11px;font-weight:700;color:#718096;text-transform:uppercase;letter-spacing:0.5px">Dirección</td>
+            <td colspan="3" style="padding:8px 12px;font-size:13px;color:#2d3748">${direccion}</td>
+          </tr>
+        </tbody>
+      </table>`;
+
+    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+    <title>Informe Predial — ${matriculaPDF}</title>
+    <style>
+      * { box-sizing: border-box; }
+      body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 32px; color: #2d3748; background: white; }
+      .header { background: linear-gradient(135deg,#1a4fd6,#0e3ab8); color: white; padding: 22px 28px; border-radius: 12px; margin-bottom: 28px; display:flex; justify-content:space-between; align-items:center; }
+      .header h1 { margin: 0 0 4px; font-size: 20px; }
+      .header p  { margin: 0; font-size: 12px; opacity: 0.75; }
+      .header-badge { background:rgba(255,255,255,0.15); padding:6px 14px; border-radius:20px; font-size:12px; font-weight:700; white-space:nowrap; }
+      .section-label { font-size: 11px; font-weight: 700; color: #718096; text-transform: uppercase; letter-spacing: 0.8px; margin: 22px 0 8px; }
+      table.usos { width: 100%; border-collapse: collapse; }
+      table.usos thead tr { background: #1a4fd6; color: white; }
+      table.usos th { padding: 9px 10px; text-align: left; font-size: 11px; font-weight: 700; letter-spacing: 0.4px; }
+      .footer { margin-top: 36px; font-size: 10px; color: #aaa; text-align: center; border-top: 1px solid #eee; padding-top: 14px; }
+      @media print { body { padding: 16px; } }
+    </style></head><body>
+    <div class="header">
+      <div>
+        <h1>Informe de Consulta Predial</h1>
+        <p>Municipio de La Ceja del Tambo &nbsp;·&nbsp; Geo-Ceja &nbsp;·&nbsp; ${fecha}</p>
+      </div>
+      <div class="header-badge">${zona}</div>
+    </div>
+    <div class="section-label">Información del Predio</div>
+    ${fichaHTML}
+    <div class="section-label">Usos del Suelo</div>
+    <table class="usos">
+      <thead><tr><th>Tipo de suelo</th><th>Descripción</th><th>Área (m²)</th><th>%</th></tr></thead>
+      <tbody>${filasHTML}</tbody>
+    </table>
+    ${mapSection}
+    <div class="footer">
+      <div style="display:flex;align-items:flex-start;gap:12px;justify-content:center;text-align:left;max-width:680px;margin:0 auto 12px;background:#f7fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px 16px;">
+        <div style="font-size:18px;flex-shrink:0">ℹ️</div>
+        <div>
+          <p style="margin:0 0 6px;font-size:11.5px;color:#4a5568;line-height:1.5">
+            Conoce la clasificación del uso de suelo de tu predio. En caso de requerir más detalle, solicitar el <strong>Concepto de Norma Urbanística</strong> ante el Departamento Administrativo de Planeación.
+          </p>
+          <a href="${LINK_NORMA_URL}" style="color:#1a4fd6;font-size:11.5px;font-weight:700;text-decoration:none">
+            🔗 ${LINK_NORMA_TEXTO} →
+          </a>
+        </div>
+      </div>
+      <p style="margin:0;font-size:10px;color:#aaa">Generado por Geo-Ceja &nbsp;·&nbsp; Alcaldía de La Ceja del Tambo &nbsp;·&nbsp; Observatorio Municipal</p>
+    </div>
+    </body></html>`;
+
+    // Abrir ventana e imprimir como PDF
+    const win = window.open('', '_blank');
+    win.document.write(html);
+    win.document.close();
+    win.onload = () => { win.focus(); win.print(); };
+
+  } catch(e) {
+    showToast('Error generando PDF: ' + e.message);
+  } finally {
+    btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> Descargar Informe PDF';
+    btn.disabled = false;
+  }
+}
+
+// ── BASEMAPS ──
+const TILES = {
+  satellite: L.tileLayer(
+    'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    {
+      maxZoom: 22,
+      maxNativeZoom: 18
+    }
+  ),
+  topo: L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', { maxZoom: 17 }),
+  osm: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }),
+  dark: L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 }),
+  light: L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 })
+};
+
+// ── INIT MAP ──
+  const map = L.map('map', {
+    center: [6.027, -75.418],
+    zoom: 11,
+    maxZoom: 22,
+    zoomControl: false,
+    attributionControl: false
+  });
+let activeBasemap = TILES.satellite;
+activeBasemap.addTo(map);
+L.control.scale({ imperial: false, position: 'bottomleft', maxWidth: 110 }).addTo(map);
+
+
+// ── MINI MAP ──
+const minimap = L.map('minimap', {
+  center: [6.027, -75.418], zoom: 8,
+  zoomControl: false, attributionControl: false, dragging: false,
+  scrollWheelZoom: false, touchZoom: false, doubleClickZoom: false
+});
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 10 }).addTo(minimap);
+map.on('moveend', () => minimap.setView(map.getCenter(), Math.max(map.getZoom() - 4, 4)));
+
+// ── BASEMAP SWITCH ──
+function setBasemap(name, btnId) {
+  map.removeLayer(activeBasemap);
+  activeBasemap = TILES[name];
+  activeBasemap.addTo(map);
+  document.querySelectorAll('.map-thumb').forEach(el => el.classList.remove('active'));
+  document.getElementById(btnId).classList.add('active');
+  showToast('Mapa base: ' + btnId.replace('mt-','').charAt(0).toUpperCase() + btnId.slice(4));
+}
+
+// ── COORDINATES ──
+const coordsEl = document.getElementById('coords');
+map.on('mousemove', e => {
+  const la = e.latlng.lat, lo = e.latlng.lng;
+  coordsEl.textContent = `${Math.abs(lo).toFixed(5)}° ${lo<0?'W':'E'} · ${Math.abs(la).toFixed(5)}° ${la>=0?'N':'S'}`;
+});
+
+// ── TABS ──
+function switchTab(el, name) {
+  document.querySelectorAll('.p-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  if (name === 'build') showToast('Modo Armar Mapa activado');
+}
+
+// ── GEOSERVER CONFIG (WMS) ────────────────────────────────────────────────
+// Tomado de tu proyecto de referencia (config.js / layers.js / map.js), que
+// ya confirmaste que funciona. WMS carga las capas como imágenes de mosaico
+// (tiles), por eso no tiene los problemas de CORS que sí tiene WFS/fetch.
+const GEOSERVER_WMS_URL   = 'https://geoserver.osorvilo.org/geoserver/wms';
+const GEOSERVER_WORKSPACE = 'plan';
+const GEOSERVER_WMS_VERSION = '1.1.1';
+
+// Nombre visible en el panel → nombre EXACTO de la capa en GeoServer (SIN el workspace)
+const GEOSERVER_LAYERS = {
+  'Usos del suelo - Urbano': 'Usos_urbanos',   // = uso_residencial en tu layers.js
+  'Perímetro urbano':     'Suelo Urbano',   // = suelo_urbano en tu layers.js
+  'Expansión urbana':     'Suelo_Expansion',// = suelo_expansion en tu layers.js
+};
+
+// Capas WMS activas en el mapa (cache) — no tocar
+const activeWmsLayers = {};
+
+  // ── DATOS PARA LA LEYENDA ──
+  const LEGEND_DATA = {
+    'Usos del suelo - Urbano': {
+      titulo: 'Urbano',
+      items: [
+        { label: 'Corredores de Comercio y Servicios (CCS)', color: '#d32f2f' },
+        { label: 'Residencial 1', color: '#fff59d' },
+        { label: 'Residencial 2', color: '#ffd54f' },
+        { label: 'Residencial 3', color: '#ffb300' },
+        { label: 'Uso Social Obligado (Equipamientos)', color: '#5e35b1' },
+        { label: 'Uso Social Obligado (Espacio Público)', color: '#43a047' },
+        { label: 'Zona de Comercio y Servicios Tipo 1 (ZCS-1)', color: '#1976d2' },
+        { label: 'Zonas Preservación', color: '#1b5e20' },
+        { label: 'Zonas Restauración', color: '#66bb6a' },
+        { label: 'Zonas Uso Sostenible', color: '#aed581' }
+      ]
+    },
+    'Perímetro urbano': {
+      titulo: 'Clasificación del Suelo',
+      items: [
+        { label: 'Suelo Urbano', color: '#ff9800' }
+      ]
+    },
+    'Expansión urbana': {
+      titulo: 'Clasificación del Suelo',
+      items: [
+        { label: 'Suelo de Expansión', color: '#f44336' }
+      ]
+    }
+  };
+
+  // Actualiza el contenido de la leyenda basándose en las capas WMS activas
+    function updateLegend() {
+      const content = document.getElementById('legend-content');
+      const legendWrap = document.getElementById('map-legend');
+      let html = '';
+      let activeCount = 0;
+
+      // Revisar qué capas WMS están activas en el mapa
+      for (const layerName in LEGEND_DATA) {
+        if (activeWmsLayers[layerName] && map.hasLayer(activeWmsLayers[layerName])) {
+          activeCount++;
+          const data = LEGEND_DATA[layerName];
+          html += `<div class="leg-section">`;
+          html += `<div class="leg-title">${data.titulo} (${layerName})</div>`;
+          data.items.forEach(item => {
+            html += `<div class="leg-item"><div class="leg-color" style="background:${item.color}"></div><span>${item.label}</span></div>`;
+          });
+          html += `</div>`;
+        }
+      }
+
+      // Si hay al menos una capa con leyenda, la mostramos; si no, la ocultamos.
+      if (activeCount > 0) {
+        content.innerHTML = html;
+        legendWrap.classList.add('show');
+      } else {
+        legendWrap.classList.remove('show');
+      }
+    }
+
+    // Hacer la leyenda arrastrable al cargar el mapa
+    setTimeout(() => {
+      const legendEl = document.getElementById('map-legend');
+      const legendDragHandle = document.getElementById('legend-header');
+      // Usamos el L.Draggable nativo de Leaflet
+      const draggable = new L.Draggable(legendEl, legendDragHandle);
+      draggable.enable();
+    }, 1000);
+
+    // Ocultar o mostrar el contenido de la leyenda (minimizar)
+      function toggleLegendContent() {
+        document.getElementById('legend-content').classList.toggle('minimized');
+        document.getElementById('legend-toggle').classList.toggle('minimized');
+      }
+
+// Añade o quita una capa WMS de GeoServer en el mapa
+  function toggleWmsLayer(displayName, on) {
+    const layerName = GEOSERVER_LAYERS[displayName];
+    if (!layerName) return false;
+
+    if (!on) {
+      if (activeWmsLayers[displayName]) {
+        map.removeLayer(activeWmsLayers[displayName]);
+      }
+      updateLegend(); // <-- AÑADIDO AQUÍ
+      return true;
+    }
+
+    if (activeWmsLayers[displayName]) {
+      activeWmsLayers[displayName].addTo(map);
+      activeWmsLayers[displayName].bringToFront();
+      updateLegend(); // <-- AÑADIDO AQUÍ
+      return true;
+    }
+
+    const wmsLayer = L.tileLayer.wms(GEOSERVER_WMS_URL, {
+      layers: `${GEOSERVER_WORKSPACE}:${layerName}`,
+      format: 'image/png',
+      transparent: true,
+      version: GEOSERVER_WMS_VERSION,
+      attribution: '© Municipio de La Ceja del Tambo',
+      maxZoom: 22,
+      maxNativeZoom: 19
+    });
+
+    wmsLayer.on('tileerror', () => {
+      showToast('❌ Error cargando "' + displayName + '" desde GeoServer');
+    });
+
+    wmsLayer.addTo(map);
+    activeWmsLayers[displayName] = wmsLayer;
+    showToast('✅ "' + displayName + '" cargada');
+    updateLegend(); // <-- AÑADIDO AQUÍ
+    return true;
+  }
+
+// Consulta atributos (GetFeatureInfo) de las capas GeoServer activas al hacer clic
+function queryActiveWmsLayers(latlng, containerPoint) {
+  const activeNames = Object.keys(activeWmsLayers).filter(n => map.hasLayer(activeWmsLayers[n]));
+  if (activeNames.length === 0) return;
+
+  const displayName = activeNames[activeNames.length - 1]; // la última capa activada (la de arriba)
+  const layerName = GEOSERVER_LAYERS[displayName];
+  const size = map.getSize();
+  const bounds = map.getBounds();
+  const sw = bounds.getSouthWest();
+  const ne = bounds.getNorthEast();
+  const fullLayerName = `${GEOSERVER_WORKSPACE}:${layerName}`;
+
+  const params = new URLSearchParams({
+    service: 'WMS',
+    version: GEOSERVER_WMS_VERSION,
+    request: 'GetFeatureInfo',
+    layers: fullLayerName,
+    query_layers: fullLayerName,
+    bbox: `${sw.lng},${sw.lat},${ne.lng},${ne.lat}`,
+    width: size.x,
+    height: size.y,
+    srs: 'EPSG:4326',
+    info_format: 'application/json',
+    x: Math.round(containerPoint.x),
+    y: Math.round(containerPoint.y),
+    feature_count: 5
+  });
+
+  fetch(`${GEOSERVER_WMS_URL}?${params.toString()}`)
+    .then(r => r.json())
+    .then(data => {
+      if (!data.features || data.features.length === 0) return;
+      const props = data.features[0].properties || {};
+      const rows = Object.entries(props)
+        .filter(([, v]) => v !== null && v !== '')
+        .slice(0, 10)
+        .map(([k, v]) => `<tr><td style="font-weight:600;padding-right:8px">${k}</td><td>${v}</td></tr>`)
+        .join('');
+      if (rows) {
+        L.popup({ maxWidth: 340 }).setLatLng(latlng)
+          .setContent(`<div class="popup-title">${displayName}</div><table style="font-size:12px">${rows}</table>`)
+          .openOn(map);
+      }
+    })
+    .catch(() => { /* silencioso: el clic normal del mapa no debe interrumpirse */ });
+}
+  // ── SÍMBOLOS TEMÁTICOS PARA LAS CAPAS ──
+    const SYMBOLS = {
+      area: '<svg viewBox="0 0 24 24" fill="currentColor" fill-opacity="0.3" stroke="currentColor" stroke-width="1.5"><polygon points="3,11 10,3 21,6 18,18 8,21"/></svg>',
+      line: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M4 20L20 4"/></svg>',
+      border: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="4 3"><rect x="3" y="3" width="18" height="18" rx="3"/></svg>',
+      home: '<svg viewBox="0 0 24 24" fill="currentColor" fill-opacity="0.3" stroke="currentColor" stroke-width="1.5"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z"/></svg>',
+      point: '<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="5"/></svg>'
+    };
+
+  // ── LAYER CATEGORIES ──
+  const CATEGORIES = [
+    // === 1. CATEGORÍAS ACTIVAS (Aparecerán de primeras) ===
+    {
+      name: 'Ordenamiento Territorial', icon: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`, badge: 2, layers: [
+        { name: 'Usos del suelo - Urbano', color: '#fdd835', typé: 'area' },
+        { name: 'Perímetro urbano', color: '#e91e63', type: 'border'},
+        { name: 'Expansión urbana', color: '#f06292', type: 'home' },
+        //{ name: 'Predios catastrales', color: '#8e24aa' }, // Búsqueda conectada a Supabase
+      ]
+    },
+
+    // === 2. CATEGORÍAS INACTIVAS (Ocultas temporalmente con /* ... */) ===
+    /*
+    {
+      name: 'Mapa de Referencia (Mapas N…', icon: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/></svg>`, badge: null, layers: [
+        { name: 'Límites municipales', color: '#e53935', checked: true },
+        { name: 'Veredas', color: '#fb8c00' },
+        { name: 'Red vial', color: '#757575', checked: true },
+        { name: 'Curvas de nivel', color: '#a5d6a7' },
+      ]
+    },
+    { name: 'Ambiente y Desarrollo Sosten…', icon: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`, badge: null, layers: [
+      { name: 'Cobertura vegetal 2024', color: '#43a047' },
+      { name: 'Áreas protegidas', color: '#00897b' },
+      { name: 'Cuencas hidrográficas', color: '#1e88e5' },
+      { name: 'Riesgo por inundación', color: '#e53935' },
+      { name: 'Suelos degradados', color: '#795548' },
+    ]},
+    { name: 'Ciencia, Tecnología e Innovaci…', icon: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/><path d="M6.3 6.3a7 7 0 0 0 0 11.4M17.7 6.3a7 7 0 0 1 0 11.4M4 12a8 8 0 0 0 3.5 6.7M4 12a8 8 0 0 1 3.5-6.7M20 12a8 8 0 0 1-3.5 6.7M20 12a8 8 0 0 0-3.5-6.7"/></svg>`, badge: null, layers: [
+      { name: 'Conectividad rural', color: '#7b1fa2' },
+      { name: 'Puntos de acceso WiFi', color: '#6a1b9a' },
+    ]},
+    { name: 'Comercio, Industria y Turismo', icon: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>`, badge: null, layers: [
+      { name: 'Zonas industriales', color: '#f57f17' },
+      { name: 'Atractivos turísticos', color: '#e91e63' },
+      { name: 'Mercados y plazas', color: '#ff8f00' },
+    ]},
+    { name: 'Cultura', icon: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>`, badge: null, layers: [
+      { name: 'Patrimonio cultural', color: '#e65100' },
+      { name: 'Parques y plazas', color: '#558b2f' },
+      { name: 'Equipamientos culturales', color: '#ad1457' },
+    ]},
+    { name: 'Educación', icon: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>`, badge: null, layers: [
+      { name: 'Instituciones educativas', color: '#1565c0' },
+      { name: 'Cobertura educativa', color: '#0d47a1' },
+    ]},
+    { name: 'Estadísticas Nacionales', icon: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>`, badge: null, layers: [
+      { name: 'Densidad poblacional', color: '#4a148c' },
+      { name: 'NBI por vereda', color: '#880e4f' },
+    ]},
+    { name: 'Función Pública', icon: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>`, badge: null, layers: [
+      { name: 'Sedes institucionales', color: '#37474f' },
+      { name: 'Notarías y registros', color: '#546e7a' },
+    ]},
+    { name: 'Presupuestos Gubernamental…', icon: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>`, badge: null, layers: [
+      { name: 'Proyectos de inversión', color: '#00838f' },
+    ]},
+    { name: 'Salud y Protección Social', icon: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>`, badge: null, layers: [
+      { name: 'IPS y centros de salud', color: '#c62828' },
+      { name: 'Cobertura salud', color: '#b71c1c' },
+    ]},
+    { name: 'Transporte', icon: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>`, badge: null, layers: [
+      { name: 'Red vial primaria', color: '#e53935' },
+      { name: 'Red vial secundaria', color: '#fb8c00' },
+      { name: 'Rutas de transporte', color: '#1e88e5' },
+    ]},
+    { name: 'Vivienda, Ciudad y Territorio', icon: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>`, badge: null, layers: [
+      { name: 'Estratificación socioeconómica', color: '#6a1b9a' },
+      { name: 'Barrios y comunas', color: '#4a148c' },
+      { name: 'Vivienda de interés social', color: '#1a237e' },
+    ]},
+    */
+  ];
+
+// Build layer list
+function buildLayerList(cats) {
+  const container = document.getElementById('layer-list');
+  container.innerHTML = '';
+  cats.forEach((cat, ci) => {
+    const catDiv = document.createElement('div');
+    catDiv.className = 'layer-category';
+    catDiv.dataset.cat = ci;
+
+    const header = document.createElement('div');
+    header.className = 'layer-cat-header';
+    header.innerHTML = `
+      <div class="layer-cat-left">
+        <svg class="layer-cat-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">${cat.icon.match(/<svg[^>]*>(.*?)<\/svg>/s)?.[1]||''}</svg>
+        <span class="layer-cat-name">${cat.name}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px">
+        ${cat.badge ? `<span class="layer-badge">${cat.badge}</span>` : ''}
+        <svg class="chevron" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>`;
+    header.onclick = () => toggleCat(catDiv);
+
+    const body = document.createElement('div');
+    body.className = 'layer-cat-body';
+    cat.layers.forEach(layer => {
+      const row = document.createElement('label');
+      row.className = 'layer-item-row';
+
+      // Si la capa no tiene un 'type' definido, usa 'area' (el polígono) por defecto
+      const symbolSvg = SYMBOLS[layer.type] || SYMBOLS.area;
+
+      row.innerHTML = `
+        <input type="checkbox" class="layer-checkbox" ${layer.checked ? 'checked' : ''} onchange="onLayerToggle('${layer.name}',this.checked)"/>
+        <span class="layer-symbol" style="color:${layer.color}">${symbolSvg}</span>
+        ${layer.name}`;
+      body.appendChild(row);
+    });
+
+    catDiv.appendChild(header);
+    catDiv.appendChild(body);
+    container.appendChild(catDiv);
+  });
+}
+buildLayerList(CATEGORIES);
+
+function toggleCat(catDiv) {
+  const body = catDiv.querySelector('.layer-cat-body');
+  const chevron = catDiv.querySelector('.chevron');
+  const isOpen = body.classList.contains('open');
+  body.classList.toggle('open', !isOpen);
+  chevron.classList.toggle('open', !isOpen);
+}
+
+function filterLayers(q) {
+  q = q.toLowerCase();
+  if (!q) { buildLayerList(CATEGORIES); return; }
+  const filtered = CATEGORIES.map(c => ({
+    ...c, layers: c.layers.filter(l => l.name.toLowerCase().includes(q) || c.name.toLowerCase().includes(q))
+  })).filter(c => c.layers.length > 0);
+  buildLayerList(filtered);
+  document.querySelectorAll('.layer-cat-body').forEach(b => b.classList.add('open'));
+  document.querySelectorAll('.chevron').forEach(ch => ch.classList.add('open'));
+}
+
+function onLayerToggle(name, on) {
+  const isGeoServerLayer = toggleWmsLayer(name, on);
+  if (!isGeoServerLayer) {
+    // Capa aún no conectada a GeoServer: solo feedback visual por ahora
+    showToast((on ? '✅ ' : '❌ ') + name);
+  }
+}
+
+// ── PLACES ──
+const PLACES = [
+  { name: 'La Ceja del Tambo', lat: 6.027, lng: -75.418, z: 13 },
+  { name: 'El Retiro', lat: 5.888, lng: -75.514, z: 13 },
+  { name: 'Abejorral', lat: 5.793, lng: -75.430, z: 12 },
+  { name: 'Marinilla', lat: 6.175, lng: -75.336, z: 12 },
+  { name: 'El Carmen de Viboral', lat: 6.088, lng: -75.338, z: 13 },
+  { name: 'Guarne', lat: 6.279, lng: -75.432, z: 13 },
+  { name: 'Rionegro', lat: 6.153, lng: -75.374, z: 12 },
+  { name: 'Sonsón', lat: 5.836, lng: -75.487, z: 12 },
+  { name: 'Argelia', lat: 5.717, lng: -75.454, z: 12 },
+  { name: 'Granada', lat: 6.151, lng: -75.196, z: 12 },
+  { name: 'Medellín', lat: 6.2518, lng: -75.5636, z: 12 },
+  { name: 'Cocorná', lat: 6.063, lng: -75.175, z: 12 },
+  { name: 'San Luis', lat: 6.043, lng: -74.997, z: 12 },
+];
+
+function onSearchType(val) {
+  const sug = document.getElementById('search-suggestions');
+  if (!val.trim()) { sug.style.display = 'none'; return; }
+  const matches = PLACES.filter(p => p.name.toLowerCase().includes(val.toLowerCase()));
+  if (!matches.length) { sug.style.display = 'none'; return; }
+  sug.style.display = 'block';
+  sug.innerHTML = matches.map(p => `
+    <div class="suggestion-item" onclick="goPlace(${p.lat},${p.lng},${p.z},'${p.name}')">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+      ${p.name}
+    </div>`).join('');
+}
+function doSearch(val) {
+  const match = PLACES.find(p => p.name.toLowerCase().includes(val.toLowerCase()));
+  if (match) goPlace(match.lat, match.lng, match.z, match.name);
+  else showToast('Sin resultados para "' + val + '"');
+  document.getElementById('search-suggestions').style.display = 'none';
+}
+function goPlace(lat, lng, z, name) {
+  map.setView([lat, lng], z);
+  L.popup().setLatLng([lat, lng])
+    .setContent(`<div class="popup-title">${name}</div><div class="popup-coords">${lat.toFixed(5)}°N, ${Math.abs(lng).toFixed(5)}°W</div>`)
+    .openOn(map);
+  document.getElementById('search-input-top').value = name;
+  document.getElementById('search-suggestions').style.display = 'none';
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest('#search-bar')) document.getElementById('search-suggestions').style.display = 'none';
+});
+
+// ── DRAW / MEASURE ──
+let drawMode = false, measuring = false, measureType = '', measurePts = [], measureLine = null;
+
+function toggleDrawMode() {
+  drawMode = !drawMode; measuring = false;
+  map.getContainer().style.cursor = drawMode ? 'crosshair' : '';
+  // botón Marcador eliminado del UI
+  showToast(drawMode ? 'Clic en el mapa para agregar marcador' : 'Modo marcador desactivado');
+}
+function startMeasure(type) {
+  clearMeasureState();
+  measuring = true; measureType = type; drawMode = false;
+  map.getContainer().style.cursor = 'crosshair';
+  document.getElementById('measure-float').style.display = 'block';
+  showToast('Midiendo ' + (type === 'distance' ? 'distancia' : 'área') + ' — doble clic para terminar');
+}
+function clearMeasureState() {
+  measuring = false; measurePts = [];
+  if (measureLine) { map.removeLayer(measureLine); measureLine = null; }
+  document.getElementById('measure-float').style.display = 'none';
+  map.getContainer().style.cursor = '';
+}
+
+map.on('click', e => {
+  if (drawMode) {
+    L.circleMarker(e.latlng, { radius: 9, fillColor: '#00b4c8', color: '#fff', weight: 2.5, fillOpacity: 0.9 })
+      .addTo(map).bindPopup(`<div class="popup-title">Marcador</div><div class="popup-coords">${e.latlng.lat.toFixed(5)}, ${e.latlng.lng.toFixed(5)}</div>`);
+    return;
+  }
+  if (measuring) {
+    measurePts.push(e.latlng);
+    if (measureLine) map.removeLayer(measureLine);
+    measureLine = L.polyline(measurePts, { color: '#00b4c8', weight: 3, dashArray: '6,4' }).addTo(map);
+    let total = 0;
+    for (let i = 1; i < measurePts.length; i++) total += measurePts[i-1].distanceTo(measurePts[i]);
+    document.getElementById('measure-val').textContent = total >= 1000 ? (total/1000).toFixed(3) + ' km' : total.toFixed(1) + ' m';
+    return;
+  }
+  // Clic normal (sin modo activo): consultar atributos de la capa GeoServer activa
+  queryActiveWmsLayers(e.latlng, map.latLngToContainerPoint(e.latlng));
+});
+map.on('dblclick', () => { if (measuring) clearMeasureState(); });
+
+// ── MY LOCATION ──
+function goMyLocation() {
+  showToast('Obteniendo ubicación GPS…');
+  navigator.geolocation.getCurrentPosition(pos => {
+    map.setView([pos.coords.latitude, pos.coords.longitude], 15);
+    L.circleMarker([pos.coords.latitude, pos.coords.longitude], { radius: 10, fillColor: '#1a4fd6', color: '#fff', weight: 3, fillOpacity: 0.9 })
+      .addTo(map).bindPopup('<div class="popup-title">📍 Mi ubicación</div>').openPopup();
+  }, () => showToast('No se pudo obtener ubicación'));
+}
+
+// ── CONTEXT MENU ──
+let ctxLL = null;
+map.getContainer().addEventListener('contextmenu', e => {
+  e.preventDefault();
+  ctxLL = map.mouseEventToLatLng(e);
+  const m = document.getElementById('ctx-menu');
+  m.style.display = 'block';
+  m.style.left = Math.min(e.clientX, window.innerWidth - 210) + 'px';
+  m.style.top = Math.min(e.clientY, window.innerHeight - 200) + 'px';
+});
+document.addEventListener('click', hideCtxMenu);
+function hideCtxMenu() { document.getElementById('ctx-menu').style.display = 'none'; }
+function ctxZoomIn() { if (ctxLL) map.setView(ctxLL, map.getZoom()+1); hideCtxMenu(); }
+function ctxZoomOut() { if (ctxLL) map.setView(ctxLL, map.getZoom()-1); hideCtxMenu(); }
+function ctxAddMarker() {
+  if (ctxLL) L.circleMarker(ctxLL, { radius: 9, fillColor: '#e53935', color: '#fff', weight: 2.5, fillOpacity: 0.9 })
+    .addTo(map).bindPopup(`<div class="popup-title">Marcador</div><div class="popup-coords">${ctxLL.lat.toFixed(5)}, ${ctxLL.lng.toFixed(5)}</div>`).openPopup();
+  hideCtxMenu();
+}
+function ctxCopyCoords() {
+  if (ctxLL) { navigator.clipboard.writeText(`${ctxLL.lat.toFixed(6)}, ${ctxLL.lng.toFixed(6)}`).catch(()=>{}); showToast(`Coordenadas copiadas`); }
+  hideCtxMenu();
+}
+
+// ── PRINT ──
+function printMap() { showToast('Preparando impresión…'); setTimeout(() => window.print(), 500); }
+
+// ── SHARE ──
+function shareMap() {
+  const c = map.getCenter(); const z = map.getZoom();
+  const url = `${location.href.split('?')[0]}?lat=${c.lat.toFixed(5)}&lng=${c.lng.toFixed(5)}&z=${z}`;
+  navigator.clipboard.writeText(url).catch(()=>{});
+  showToast('Enlace del mapa copiado al portapapeles');
+}
+
+// ── CLEAR ALL ──
+function clearAll() {
+  clearMeasureState(); drawMode = false;
+  map.getContainer().style.cursor = '';
+  showToast('Dibujos y mediciones borrados');
+}
+
+// ── TOAST ──
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+}
+</script>
+</body>
+</html>
