@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#12131a">
+<title>Panel administrativo — Atlas de Equidad</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+<div class="bg-field"></div>
+
+<!-- ===================== PANTALLA DE LOGIN ===================== -->
+<div id="loginScreen" class="centered-shell">
+  <div class="card">
+    <h1>Panel administrativo</h1>
+    <p class="sub">Acceso exclusivo para funcionarios autorizados de la Secretaría de Equidad de Género.</p>
+    <form id="loginForm">
+      <div class="field">
+        <label for="loginEmail">Correo institucional</label>
+        <input type="email" id="loginEmail" required autocomplete="username">
+      </div>
+      <div class="field">
+        <label for="loginPass">Contraseña</label>
+        <input type="password" id="loginPass" required autocomplete="current-password">
+      </div>
+      <button class="btn btn-primary" type="submit" style="width:100%">Ingresar</button>
+      <div id="loginMsg" class="form-msg"></div>
+    </form>
+    <p style="font-size:11.5px;color:var(--ink-faint);margin-top:22px">
+      Las cuentas se crean únicamente desde Supabase Auth por un superadministrador.
+      No hay registro público a este panel.
+    </p>
+  </div>
+</div>
+
+<!-- ===================== SHELL ADMINISTRATIVO ===================== -->
+<div id="adminShell" class="admin-shell" style="display:none">
+  <aside class="sidebar">
+    <div class="brand">
+      <svg class="brand-mark" viewBox="0 0 40 40" fill="none">
+        <path d="M20 4 L20 36 M4 20 L36 20 M8.5 8.5 L31.5 31.5 M31.5 8.5 L8.5 31.5" stroke-width="4" stroke-linecap="round"/>
+      </svg>
+      <div>
+        <div class="brand-name" style="font-size:15px">Atlas de Equidad</div>
+        <div class="brand-sub" style="font-size:10px">Panel administrativo</div>
+      </div>
+    </div>
+    <ul class="side-nav">
+      <li><button data-tab="dashboard" class="active">Dashboard</button></li>
+      <li><button data-tab="personas">Personas registradas</button></li>
+      <li><button data-tab="sectores">Sectores y capas</button></li>
+      <li><button data-tab="auditoria">Auditoría</button></li>
+    </ul>
+    <div class="sidebar-footer">
+      <div id="userLabel">—</div>
+      <button class="btn btn-ghost" id="logoutBtn" style="margin-top:10px;padding:8px 12px">Cerrar sesión</button>
+    </div>
+  </aside>
+
+  <main class="admin-main">
+
+    <!-- ---------- DASHBOARD ---------- -->
+    <section id="tab-dashboard">
+      <h2>Panorama general</h2>
+      <p class="page-sub">Estadísticas agregadas de caracterización territorial.</p>
+      <div class="stat-grid">
+        <div class="stat-card"><div class="n" id="statTotal">—</div><div class="l">Personas registradas</div></div>
+        <div class="stat-card"><div class="n" id="statSectores">—</div><div class="l">Sectores con registros</div></div>
+        <div class="stat-card risk"><div class="n" id="statRiesgo">—</div><div class="l">En situación de riesgo</div></div>
+        <div class="stat-card"><div class="n" id="statSemana">—</div><div class="l">Nuevos en 7 días</div></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h3>Mapa de densidad</h3></div>
+        <div class="mini-map" id="miniMap"></div>
+      </div>
+    </section>
+
+    <!-- ---------- PERSONAS ---------- -->
+    <section id="tab-personas" style="display:none">
+      <div class="panel-head">
+        <div>
+          <h2 style="margin-bottom:2px">Personas registradas</h2>
+          <p class="page-sub" style="margin:0">Solo tú y funcionarios autorizados pueden ver esta información. Cada consulta queda auditada.</p>
+        </div>
+        <button class="btn btn-primary" id="openAddPerson">+ Agregar persona</button>
+      </div>
+      <div class="panel">
+        <div class="panel-head">
+          <h3>Listado</h3>
+          <select id="filterSector" class="field" style="width:220px;margin:0">
+            <option value="">Todos los sectores</option>
+          </select>
+        </div>
+        <table>
+          <thead><tr>
+            <th>Referencia</th><th>Sector</th><th>Rango edad</th><th>Identidad</th>
+            <th>Riesgo</th><th>Registrado</th><th></th>
+          </tr></thead>
+          <tbody id="peopleTbody"></tbody>
+        </table>
+        <div class="pagination">
+          <button class="btn btn-ghost" id="prevPage">← Anterior</button>
+          <button class="btn btn-ghost" id="nextPage">Siguiente →</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- SECTORES ---------- -->
+    <section id="tab-sectores" style="display:none">
+      <h2>Sectores y capas territoriales</h2>
+      <p class="page-sub">Sube el GeoJSON de barrios, veredas, vías o zonas de tu municipio.</p>
+
+      <div class="panel">
+        <div class="panel-head"><h3>Importar capa GeoJSON</h3></div>
+        <div class="field">
+          <label for="geojsonTipo">Tipo de capa a importar</label>
+          <select id="geojsonTipo">
+            <option value="barrio">Barrios</option>
+            <option value="vereda">Veredas</option>
+            <option value="via">Vías principales</option>
+            <option value="zona">Zonas de interés</option>
+            <option value="otro">Otro</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="geojsonFile">Archivo .geojson / .json</label>
+          <input type="file" id="geojsonFile" accept=".json,.geojson">
+        </div>
+        <p style="font-size:12px;color:var(--ink-faint)">
+          Cada feature debe tener <code>properties.nombre</code>. El sistema usa la propiedad
+          <code>properties.tipo</code> si existe; si no, aplica el tipo seleccionado arriba.
+        </p>
+        <button class="btn btn-primary" id="importGeojsonBtn">Importar capa</button>
+        <div id="importMsg" class="form-msg"></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head"><h3>Sectores cargados</h3></div>
+        <table>
+          <thead><tr><th>Nombre</th><th>Tipo</th><th>Código</th><th></th></tr></thead>
+          <tbody id="sectorsTbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ---------- AUDITORÍA ---------- -->
+    <section id="tab-auditoria" style="display:none">
+      <h2>Bitácora de auditoría</h2>
+      <p class="page-sub">Solo visible para superadministradores. Registro inmutable de accesos a datos sensibles.</p>
+      <div class="panel">
+        <table>
+          <thead><tr><th>Fecha</th><th>Acción</th><th>Tabla</th><th>Motivo</th></tr></thead>
+          <tbody id="auditTbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ===================== MODAL: AGREGAR / EDITAR PERSONA ===================== -->
+<div id="personModal" class="modal-backdrop" style="display:none">
+  <div class="modal">
+    <h3 id="personModalTitle">Agregar persona</h3>
+    <p class="sub">La caracterización no incluye documento de identidad ni dirección exacta.</p>
+    <form id="personForm">
+      <input type="hidden" id="personId">
+      <div class="field">
+        <label for="pSector">Sector / vereda *</label>
+        <select id="pSector" required></select>
+      </div>
+      <div class="field">
+        <label for="pEdad">Rango de edad</label>
+        <select id="pEdad">
+          <option value="">Sin especificar</option>
+          <option>13-17</option><option>18-25</option><option>26-35</option>
+          <option>36-45</option><option>46-59</option><option>60+</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="pIdentidad">Identidad de género (autoidentificación)</label>
+        <input type="text" id="pIdentidad" placeholder="Ej: mujer trans, no binario...">
+      </div>
+      <div class="field">
+        <label for="pOrientacion">Orientación sexual (autoidentificación)</label>
+        <input type="text" id="pOrientacion" placeholder="Ej: bisexual, gay, lesbiana...">
+      </div>
+      <div class="field">
+        <label for="pNecesidades">Necesidades identificadas (separadas por coma)</label>
+        <input type="text" id="pNecesidades" placeholder="salud, vivienda, empleo...">
+      </div>
+      <div class="checkbox-row">
+        <input type="checkbox" id="pRiesgo">
+        <label for="pRiesgo">Se identifica una situación de riesgo que requiere seguimiento prioritario</label>
+      </div>
+
+      <div class="consent-box">
+        <div class="checkbox-row">
+          <input type="checkbox" id="pConsentimiento" required>
+          <label for="pConsentimiento"><strong>Confirmo que la persona fue informada</strong> sobre el uso de sus datos
+          conforme a la Ley 1581 de 2012, y otorgó su consentimiento libre, expreso e informado para este registro.</label>
+        </div>
+      </div>
+
+      <details style="margin-top:6px">
+        <summary style="cursor:pointer;font-size:13px;color:var(--ink-dim)">Datos de contacto (opcional, solo si la persona autoriza seguimiento)</summary>
+        <div style="margin-top:14px">
+          <div class="field"><label for="pNombre">Nombre completo</label><input type="text" id="pNombre"></div>
+          <div class="field"><label for="pTelefono">Teléfono</label><input type="text" id="pTelefono"></div>
+          <div class="field"><label for="pCorreo">Correo</label><input type="email" id="pCorreo"></div>
+          <div class="field"><label for="pBarrioAprox">Referencia de ubicación (texto libre, NO dirección exacta)</label><input type="text" id="pBarrioAprox" placeholder="Ej: cerca a la plaza principal"></div>
+        </div>
+      </details>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" id="cancelPersonModal">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Guardar</button>
+      </div>
+      <div id="personFormMsg" class="form-msg"></div>
+    </form>
+  </div>
+</div>
+
+<!-- ===================== MODAL: MOTIVO (edición / borrado / consulta de contacto) ===================== -->
+<div id="motivoModal" class="modal-backdrop" style="display:none">
+  <div class="modal" style="width:420px">
+    <h3 id="motivoTitle">Justificación requerida</h3>
+    <p class="sub">Esta acción queda registrada en la bitácora de auditoría.</p>
+    <div class="field">
+      <label for="motivoInput">Motivo</label>
+      <textarea id="motivoInput" placeholder="Ej: actualización de datos por jornada de seguimiento del 12 de agosto"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="cancelMotivo">Cancelar</button>
+      <button class="btn btn-danger" id="confirmMotivo">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script src="js/admin.js"></script>
+</body>
+</html>

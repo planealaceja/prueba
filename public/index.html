@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="es" class="anim">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#12131a">
+<title>Atlas de Equidad — Mapa territorial</title>
+<meta name="description" content="Caracterización territorial agregada de la comunidad LGBTIQ+, sin datos individuales, por sector/vereda.">
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+<div class="bg-field"></div>
+
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <linearGradient id="markGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#8b7bff"/>
+      <stop offset="55%" stop-color="#ff7aa8"/>
+      <stop offset="100%" stop-color="#ffc861"/>
+    </linearGradient>
+  </defs>
+</svg>
+
+<header class="topbar" data-anim="rise" style="--d:.05s">
+  <div class="brand">
+    <svg class="brand-mark" viewBox="0 0 40 40" fill="none">
+      <path d="M20 4 L20 36 M4 20 L36 20 M8.5 8.5 L31.5 31.5 M31.5 8.5 L8.5 31.5"
+            stroke-width="4" stroke-linecap="round"/>
+    </svg>
+    <div>
+      <div class="brand-name">Atlas de Equidad</div>
+      <div class="brand-sub" id="municipioLabel">Secretaría de Equidad de Género</div>
+    </div>
+  </div>
+
+  <ul class="nav-links">
+    <li><a href="#" class="active">Mapa</a></li>
+    <li><a href="#about">Sobre el proyecto</a></li>
+    <li><a href="#privacidad">Privacidad</a></li>
+  </ul>
+
+  <a class="btn btn-ghost" href="admin.html">Panel administrativo →</a>
+
+  <button class="burger" id="burgerBtn" aria-label="Abrir menú"><span></span></button>
+</header>
+
+<main class="map-wrap" data-anim="rise" style="--d:.15s">
+  <div id="map"></div>
+
+  <section class="layer-panel" aria-label="Capas del mapa">
+    <h3>Capas territoriales</h3>
+    <div id="layerList"><!-- se llena por JS según los sectores cargados --></div>
+    <div class="heat-legend">
+      <div style="font-size:11.5px;color:var(--ink-dim)">Densidad de registros</div>
+      <div class="heat-legend-scale"></div>
+      <div class="heat-legend-labels"><span>Sin registros</span><span>Alta densidad</span></div>
+    </div>
+  </section>
+
+  <div class="stat-pill">
+    <span class="num" id="statNum">—</span>
+    <span class="label" id="statLabel">personas caracterizadas en el municipio</span>
+  </div>
+
+  <div class="credit">Datos agregados por sector · Sin ubicaciones individuales</div>
+</main>
+
+<section id="about" class="visually-hidden">
+  Este mapa muestra información agregada por sector, vereda o barrio sobre la
+  caracterización de personas de la comunidad LGBTIQ+ en el municipio, con
+  fines de planeación de política pública de equidad de género. No se muestra
+  la ubicación exacta de ninguna persona.
+</section>
+<section id="privacidad" class="visually-hidden">
+  Los datos individuales de las personas registradas están protegidos y solo
+  son accesibles, de forma auditada, por funcionarios autorizados de la
+  Secretaría de Equidad de Género, conforme a la Ley 1581 de 2012.
+</section>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script src="js/map-public.js"></script>
+<script>
+  document.getElementById('municipioLabel').textContent =
+    (window.ATLAS_CONFIG.MUNICIPIO_NOMBRE || 'Municipio') + ' · Secretaría de Equidad de Género';
+  window.addEventListener('load', () => {
+    setTimeout(() => document.documentElement.classList.remove('anim'), 900);
+  });
+</script>
+</body>
+</html>

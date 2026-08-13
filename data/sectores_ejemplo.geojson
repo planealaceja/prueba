@@ -1,0 +1,57 @@
+{
+  "type": "FeatureCollection",
+  "name": "sectores_ejemplo",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "nombre": "Barrio Centro",
+        "tipo": "barrio",
+        "codigo": "01-001"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-75.4300, 6.0270],
+          [-75.4260, 6.0270],
+          [-75.4260, 6.0300],
+          [-75.4300, 6.0300],
+          [-75.4300, 6.0270]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nombre": "Vereda La Playa",
+        "tipo": "vereda",
+        "codigo": "01-V04"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-75.4400, 6.0200],
+          [-75.4340, 6.0200],
+          [-75.4340, 6.0260],
+          [-75.4400, 6.0260],
+          [-75.4400, 6.0200]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nombre": "Vía Principal",
+        "tipo": "via",
+        "codigo": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [-75.4380, 6.0230],
+          [-75.4280, 6.0285]
+        ]
+      }
+    }
+  ]
+}
